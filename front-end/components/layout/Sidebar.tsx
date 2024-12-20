@@ -10,7 +10,7 @@ const navItems = [
   { icon: Home, href: '/', label: 'Home' },
   { icon: User, href: '/datacapsule', label: 'ModalX Capsule' },
   { icon: LayoutGrid, href: '/datacollection', label: 'ModalX Collection' },
-  { icon: BookOpen, href: '/dataCreation', label: 'ModalX Creativity' },
+  { icon: BookOpen, href: '/datacreation', label: 'ModalX Creativity' },
   { icon: Settings, href: '/settings', label: 'Settings' }
 ];
 
@@ -22,7 +22,7 @@ export function Sidebar() {
       <aside className="w-[300px] bg-[#14142B] text-white flex flex-col min-h-screen">
         <div className="p-6 flex items-center gap-2">
           <Brain className="w-6 h-6" />
-          <h2 className="text-xl font-semibold">ModalX Learn</h2>
+          <h2 className="text-xl font-semibold">ModalX Studio</h2>
         </div>
 
         <nav className="flex-1 py-6">

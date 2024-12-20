@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { Star, Clock, Users, ChevronDown, BarChart2, Mic, Square, Play, Pause } from 'lucide-react';
+import { Star, Clock, Users, ChevronDown, BarChart2, Mic, Square, Play, Pause, Upload } from 'lucide-react';
 
 const popularCourses = [
   {
@@ -35,10 +35,25 @@ const categories = [
   'Image',
 ];
 
+interface AudioData {
+  id: number;
+  title: string;
+  duration: string;
+  image: string;
+  category: string;
+  timestamp: string;
+}
+
 export default function CoursesPage() {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
+  const [recordedAudio, setRecordedAudio] = useState<Blob | null>(null);
+  const [audioList, setAudioList] = useState<AudioData[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState('All');
 
   useEffect(() => {
     if (isRecording) {
@@ -54,15 +69,112 @@ export default function CoursesPage() {
     };
   }, [isRecording]);
 
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      setAudioStream(stream);
+      
+      const recorder = new MediaRecorder(stream);
+      setMediaRecorder(recorder);
+      
+      const chunks: Blob[] = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          chunks.push(e.data);
+        }
+      };
+      
+      recorder.onstop = () => {
+        const audioBlob = new Blob(chunks, { type: 'audio/wav' });
+        setRecordedAudio(audioBlob);
+        setAudioChunks([]);
+      };
+      
+      recorder.start();
+      setIsRecording(true);
+      setRecordingTime(0);
+    } catch (error) {
+      console.error('Error accessing microphone:', error);
+      alert('无法访问麦克风，请确保已授予权限。');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorder && audioStream) {
+      mediaRecorder.stop();
+      audioStream.getTracks().forEach(track => track.stop());
+      setIsRecording(false);
+      setMediaRecorder(null);
+      setAudioStream(null);
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!recordedAudio) {
+      alert('请先录制音频');
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('audio', recordedAudio, 'recording.wav');
+      
+      const response = await fetch('http://45.252.106.202:5000/api/upload-audio', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+      
+      const data = await response.json();
+      console.log('Upload successful:', data);
+      
+      const newAudio: AudioData = {
+        id: Date.now(),
+        title: `Recording_${new Date().toLocaleDateString()}`,
+        duration: `${Math.floor(recordingTime / 60)}:${(recordingTime % 60).toString().padStart(2, '0')}`,
+        image: 'https://picsum.photos/seed/audio1/400/250',
+        category: 'Audio',
+        timestamp: data.filename
+      };
+      
+      setAudioList(prevList => [newAudio, ...prevList]);
+      alert('上传成功！');
+      setRecordedAudio(null);
+    } catch (error) {
+      console.error('Error uploading audio:', error);
+      alert('上传音频失败，请重试。');
+    }
+  };
+
   const handleRecordingToggle = () => {
     if (!isRecording) {
-      setRecordingTime(0);
+      startRecording();
+    } else {
+      stopRecording();
     }
-    setIsRecording(!isRecording);
+  };
+
+  const handleCancel = () => {
+    setRecordedAudio(null);
+    setRecordingTime(0);
+    if (isRecording) {
+      stopRecording();
+    }
+  };
+
+  const getFilteredData = () => {
+    const allData = [...audioList, ...popularCourses];
+    if (selectedCategory === 'All') {
+      return allData;
+    }
+    return allData.filter(item => item.category === selectedCategory);
   };
 
   return (
-    <div className="flex gap-6 p-6 bg-[#FAF8F8] min-h-screen">
+    <div className="flex gap-6 p-6 bg-[#FAF8F8] min-h-screen overflow-hidden">
       <div className="flex-1">
         <div className="flex justify-between items-center mb-8">
           <div>
@@ -75,6 +187,39 @@ export default function CoursesPage() {
               <span>This Year</span>
               <ChevronDown className="w-4 h-4" />
             </button>
+          </div>
+        </div>
+
+        {/* Image Upload Bar */}
+        <div className="bg-white p-4 rounded-lg shadow-sm mb-6 border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <label 
+                htmlFor="image-upload"
+                className="p-3 rounded-full bg-green-500 hover:bg-green-600 text-white transition-colors cursor-pointer"
+              >
+                <Upload className="w-5 h-5" />
+                <input 
+                  type="file" 
+                  id="image-upload" 
+                  accept="image/*" 
+                  className="hidden" 
+                />
+              </label>
+              <div className="flex items-center gap-2">
+                <div className="w-96 text-sm text-gray-600">
+                  No file chosen
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button className="px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-lg hover:bg-green-600 transition-colors">
+                Upload
+              </button>
+              <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
 
@@ -104,8 +249,51 @@ export default function CoursesPage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition-colors">
-                Save
+              <button 
+                onClick={handleUpload}
+                disabled={!recordedAudio}
+                className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors
+                  ${recordedAudio 
+                    ? 'bg-blue-500 hover:bg-blue-600' 
+                    : 'bg-gray-400 cursor-not-allowed'}`}
+              >
+                Upload
+              </button>
+              <button 
+                onClick={handleCancel}
+                disabled={!recordedAudio && !isRecording}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors
+                  ${(recordedAudio || isRecording)
+                    ? 'text-gray-700 bg-gray-100 hover:bg-gray-200'
+                    : 'text-gray-400 bg-gray-100 cursor-not-allowed'}`}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* URL Parsing Bar */}
+        <div className="bg-white p-4 rounded-lg shadow-sm mb-6 border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-full bg-purple-500 text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <input 
+                  type="url" 
+                  placeholder="Enter URL to parse text"
+                  className="w-96 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button className="px-4 py-2 text-sm font-medium text-white bg-purple-500 rounded-lg hover:bg-purple-600 transition-colors">
+                Upload
               </button>
               <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
                 Cancel
@@ -114,11 +302,16 @@ export default function CoursesPage() {
           </div>
         </div>
 
-        <div className="flex gap-3 mb-8 overflow-x-auto pb-2">
+        <div className="flex gap-3 mb-8">
           {categories.map((category) => (
             <button
               key={category}
-              className="px-4 py-2 text-sm font-medium rounded-full bg-white text-gray-700 hover:bg-gray-50 whitespace-nowrap border border-gray-200"
+              onClick={() => setSelectedCategory(category)}
+              className={`px-4 py-2 text-sm font-medium rounded-full transition-colors
+                ${selectedCategory === category
+                  ? 'bg-blue-500 text-white hover:bg-blue-600'
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
+                } whitespace-nowrap border border-gray-200`}
             >
               {category}
             </button>
@@ -128,29 +321,34 @@ export default function CoursesPage() {
         <section className="mb-8">
           <h2 className="text-xl font-semibold mb-4">Your Data</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {popularCourses.map((course) => (
+            {getFilteredData().map((item) => (
               <div
-                key={course.id}
+                key={item.id}
                 className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
               >
                 <div className="relative h-48">
                   <Image
-                    src={course.image}
-                    alt={course.title}
+                    src={item.image}
+                    alt={item.title}
                     fill
                     className="object-cover"
                   />
                   <span className="absolute top-3 right-3 px-2 py-1 text-xs font-medium bg-white/90 rounded-full">
-                    {course.category}
+                    {item.category}
                   </span>
                 </div>
                 <div className="p-4">
-                  <h3 className="font-semibold text-lg mb-2">{course.title}</h3>
+                  <h3 className="font-semibold text-lg mb-2">{item.title}</h3>
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-1">
                       <Clock className="w-4 h-4 text-gray-400" />
-                      <span>{course.duration}</span>
+                      <span>{item.duration}</span>
                     </div>
+                    {('timestamp' in item) && typeof item.timestamp === 'string' && (
+                      <div className="text-xs text-gray-500">
+                        {item.timestamp}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

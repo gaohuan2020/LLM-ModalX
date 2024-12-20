@@ -1,0 +1,21 @@
+model:
+  name: "paraformer-zh"
+  revision: "v2.0.4"
+
+vad:
+  model: "fsmn-vad"
+  revision: "v2.0.4"
+
+punctuation:
+  model: "ct-punc-c"
+  revision: "v2.0.4"
+
+speaker:
+  model: "cam++"
+  revision: "v2.0.2"
+
+transcription:
+  batch_size_s: 60
+  merge_length_s: 15
+  use_itn: true
+  language: "auto"  # Options: "zn", "en", "yue", "ja", "ko", "nospeech" 

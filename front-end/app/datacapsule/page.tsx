@@ -73,7 +73,7 @@ export default function CoursesPage() {
           </div>
         </div>
 
-        <div className="flex gap-3 mb-8 overflow-x-auto pb-2">
+        <div className="flex gap-3 mb-8">
           {categories.map((category) => (
             <button
               key={category}

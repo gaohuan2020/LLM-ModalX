@@ -2,10 +2,40 @@
 
 import Link from 'next/link';
 import { Chrome, EyeOff } from 'lucide-react';
-import { useState } from 'react';
+import { useState, FormEvent } from 'react';
 
 export default function SignInPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    try {
+      const response = await fetch('http://45.252.106.202:5000/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to sign in');
+      }
+
+      // Handle successful login
+      const data = await response.json();
+      // You might want to redirect or update auth state here
+      window.location.href = '/datacapsule'; // Or use Next.js router
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    }
+  };
 
   return (
     <div className="flex items-center justify-center min-h-full p-6">
@@ -31,7 +61,10 @@ export default function SignInPage() {
           </div>
         </div>
 
-        <form className="space-y-6">
+        <form className="space-y-6" onSubmit={handleSubmit}>
+          {error && (
+            <div className="text-red-500 text-sm text-center">{error}</div>
+          )}
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
               Email address
@@ -39,8 +72,11 @@ export default function SignInPage() {
             <input
               type="email"
               id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-[#14142B] focus:border-transparent"
               placeholder="Enter your email"
+              required
             />
           </div>
 
@@ -57,8 +93,11 @@ export default function SignInPage() {
               <input
                 type={showPassword ? 'text' : 'password'}
                 id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-[#14142B] focus:border-transparent"
                 placeholder="Enter your password"
+                required
               />
               <button
                 type="button"

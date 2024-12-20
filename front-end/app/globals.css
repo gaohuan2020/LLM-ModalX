@@ -4,6 +4,7 @@
 
 body {
   font-family: Arial, Helvetica, sans-serif;
+  overflow: hidden;
 }
 
 @layer utilities {
@@ -11,7 +12,14 @@ body {
     text-wrap: balance;
   }
 }
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
 
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -75,4 +83,23 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.content-container {
+  height: 100vh;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.content-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.content-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.content-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
 }
