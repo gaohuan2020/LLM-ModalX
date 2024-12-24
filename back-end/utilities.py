@@ -7,6 +7,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 from selenium.common.exceptions import WebDriverException
 import platform
+from flask import jsonify
 
 ALLOWED_EXTENSIONS = {'wav', 'mp3', 'ogg'}
 
@@ -124,6 +125,13 @@ def extract_text_from_url(url: str, need_js: bool = False) -> str:
 
     except Exception as e:
         raise Exception(f"Failed to parse URL: {str(e)}")
+
+
+def create_response(data=None, error=None, status_code=200):
+    """Helper function to create consistent API responses"""
+    if error:
+        return jsonify({'error': str(error)}), status_code
+    return jsonify(data), status_code
 
 
 extract_text_from_url("https://mp.weixin.qq.com/s/IXrxfaMQzFxswSxCsulejw",

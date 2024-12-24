@@ -34,7 +34,7 @@ The system configuration is managed through `back-end/agent/rag/config.yaml`. He
 ### LLM Configuration
 ```yaml
 llm:
-  api_base: "http://127.0.0.1:8000/v1"  # vLLM OpenAI-compatible API endpoint
+  api_base: "http://127.0.0.1:8000/v1"   # vLLM OpenAI-compatible API endpoint
   model: "Models/Qwen2.5-72b-Instruct"   # LLM model path or identifier
   api_key: "token-abc123"                # API authentication token
   temperature: 0.0                       # Controls randomness in generation (0.0 = deterministic)

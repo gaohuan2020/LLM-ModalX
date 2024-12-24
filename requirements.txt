@@ -1,0 +1,32 @@
+# Web Framework
+flask==3.0.2
+flask-cors==4.0.0
+
+# Machine Learning & Deep Learning
+torch==2.2.0
+transformers==4.37.2
+vllm==0.3.3
+
+# LangChain Ecosystem
+langchain==0.1.12
+langchain-community==0.0.27
+langchain-core==0.1.30
+langgraph==0.0.19
+
+# Data Processing
+numpy==1.24.3
+pandas==2.1.4
+pyyaml>=6.0.1
+chromadb>=0.4.22
+
+# Audio Processing
+funasr-onnx==0.3.1
+funasr-utils==0.3.1
+
+# Vector Store & Embeddings
+sentence-transformers>=2.5.1
+
+# Utilities
+python-dotenv>=1.0.0
+requests>=2.31.0
+tqdm>=4.66.1
