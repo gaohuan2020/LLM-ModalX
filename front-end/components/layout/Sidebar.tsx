@@ -10,6 +10,7 @@ const navItems = [
   { icon: Home, href: '/', label: 'Home' },
   { icon: User, href: '/datacapsule', label: 'ModalX Capsule' },
   { icon: LayoutGrid, href: '/datacollection', label: 'ModalX Collection' },
+  { icon: Brain, href: '/datacreate', label: 'ModalX Creation' },
   { icon: BookOpen, href: '/datacsearch', label: 'ModalX Search' },
   { icon: Settings, href: '/settings', label: 'Settings' }
 ];

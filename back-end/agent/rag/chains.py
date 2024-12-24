@@ -1,5 +1,5 @@
-from data_model import GradeDocuments, GradeHallucinations, GradeAnswer
-from model import llm
+from .data_model import GradeDocuments, GradeHallucinations, GradeAnswer
+from .model import llm
 from langchain_core.prompts import ChatPromptTemplate
 from langchain import hub
 from langchain_core.output_parsers import StrOutputParser

@@ -1,7 +1,13 @@
 {
   "dependencies": {
+    "@uiw/react-md-editor": "^4.0.5",
     "chart.js": "^4.4.7",
     "date-fns": "^4.1.0",
-    "react-chartjs-2": "^5.2.0"
+    "react-chartjs-2": "^5.2.0",
+    "react-markdown": "^9.0.1",
+    "remark-gfm": "^4.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/typography": "^0.5.15"
   }
 }

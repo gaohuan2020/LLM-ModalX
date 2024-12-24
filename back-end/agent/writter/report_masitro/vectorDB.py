@@ -28,7 +28,7 @@ class VectorStore():
         return Document(page_content=content, metadata={"source": source})
 
     def search(self, query: str) -> List[Document]:
-        return self.index.similarity_search(query, k=5)
+        return self.index.similarity_search(query, k=2)
 
     def search_list(self, query_list: List[str]) -> List[Document]:
         docs = []

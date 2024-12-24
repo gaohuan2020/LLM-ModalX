@@ -54,6 +54,8 @@ export default function CoursesPage() {
   const [recordedAudio, setRecordedAudio] = useState<Blob | null>(null);
   const [audioList, setAudioList] = useState<AudioData[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [isParsingUrl, setIsParsingUrl] = useState(false);
+  const [urlInput, setUrlInput] = useState('');
 
   useEffect(() => {
     if (isRecording) {
@@ -173,6 +175,54 @@ export default function CoursesPage() {
     return allData.filter(item => item.category === selectedCategory);
   };
 
+  const handleUrlParse = async () => {
+    if (!urlInput) {
+      alert('请输入URL');
+      return;
+    }
+
+    try {
+      setIsParsingUrl(true);
+      const response = await fetch('http://45.252.106.202:5000/api/parse-url', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: urlInput,
+          need_js: true // 默认启用 JavaScript 解析
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('URL parsing failed');
+      }
+
+      const data = await response.json();
+      console.log('Parsing successful:', data);
+
+      // 添加到数据列表
+      const newItem = {
+        id: Date.now(),
+        title: `URL_${new Date().toLocaleDateString()}`,
+        duration: `${data.content.length} chars`,
+        image: 'https://picsum.photos/seed/text1/400/250',
+        category: 'Text',
+        timestamp: new Date().toISOString()
+      };
+
+      setAudioList(prevList => [newItem, ...prevList]);
+      alert('URL解析成功！');
+      setUrlInput(''); // 清空输入框
+
+    } catch (error) {
+      console.error('Error parsing URL:', error);
+      alert('URL解析失败，请重试。');
+    } finally {
+      setIsParsingUrl(false);
+    }
+  };
+
   return (
     <div className="flex gap-6 p-6 bg-[#FAF8F8] min-h-screen overflow-hidden">
       <div className="flex-1">
@@ -286,16 +336,32 @@ export default function CoursesPage() {
               <div className="flex-1">
                 <input 
                   type="url" 
+                  value={urlInput}
+                  onChange={(e) => setUrlInput(e.target.value)}
                   placeholder="Enter URL to parse text"
                   className="w-96 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button className="px-4 py-2 text-sm font-medium text-white bg-purple-500 rounded-lg hover:bg-purple-600 transition-colors">
-                Upload
+              <button 
+                onClick={handleUrlParse}
+                disabled={isParsingUrl || !urlInput}
+                className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors
+                  ${isParsingUrl || !urlInput 
+                    ? 'bg-gray-400 cursor-not-allowed' 
+                    : 'bg-purple-500 hover:bg-purple-600'}`}
+              >
+                {isParsingUrl ? 'Uploading...' : 'Upload'}
               </button>
-              <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+              <button 
+                onClick={() => setUrlInput('')}
+                disabled={isParsingUrl || !urlInput}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors
+                  ${isParsingUrl || !urlInput
+                    ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
+                    : 'text-gray-700 bg-gray-100 hover:bg-gray-200'}`}
+              >
                 Cancel
               </button>
             </div>

@@ -1,4 +1,4 @@
-from chains import build_answer_grader_chain, build_hallucination_grader_chain
+from .chains import build_answer_grader_chain, build_hallucination_grader_chain
 
 answer_grader = build_answer_grader_chain()
 hallucination_grader = build_hallucination_grader_chain()

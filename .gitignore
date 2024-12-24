@@ -4,3 +4,13 @@ __pycache__/
 *.pyo
 *.pyd
 .Python 
+*.deb 
+*.bin
+*.wav
+*.sqlite3
+
+# Node.js
+node_modules/ 
+
+# Database
+back-end/chroma_db
