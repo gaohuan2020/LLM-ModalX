@@ -14,3 +14,6 @@ node_modules/
 
 # Database
 back-end/chroma_db
+
+# IDE specific files
+.vscode/
