@@ -1,5 +1,6 @@
 import requests
 import time
+import os
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
@@ -10,6 +11,24 @@ import platform
 from flask import jsonify
 
 ALLOWED_EXTENSIONS = {'wav', 'mp3', 'ogg'}
+
+# Global Chrome driver instance
+chrome_driver = None
+
+
+def initialize_chrome_driver():
+    """Initialize Chrome driver with configured options"""
+    global chrome_driver
+    try:
+        chrome_options = get_chrome_options()
+        chrome_driver = webdriver.Chrome(service=Service(
+            ChromeDriverManager().install()),
+                                         options=chrome_options,
+                                         keep_alive=True)
+        return True
+    except WebDriverException as e:
+        print(f"Failed to initialize Chrome driver: {str(e)}")
+        return False
 
 
 def allowed_file(filename: str) -> bool:
@@ -59,21 +78,17 @@ def extract_text_from_url(url: str, need_js: bool = False) -> str:
     """
     try:
         if need_js:
+            global chrome_driver
             try:
-                chrome_options = get_chrome_options()
+                if not chrome_driver:
+                    if not initialize_chrome_driver():
+                        return extract_text_from_url(url, need_js=False)
 
-                # Initialize the Chrome WebDriver
-                driver = webdriver.Chrome(service=Service(
-                    ChromeDriverManager().install()),
-                                          options=chrome_options)
-
-                driver.get(url)
+                chrome_driver.get(url)
                 time.sleep(5)
-                page_source = driver.page_source
-                driver.quit()
+                page_source = chrome_driver.page_source
 
             except WebDriverException as e:
-                # Fallback to requests if Chrome is not available
                 print(
                     f"Chrome automation failed: {str(e)}. Falling back to requests..."
                 )
@@ -134,5 +149,14 @@ def create_response(data=None, error=None, status_code=200):
     return jsonify(data), status_code
 
 
-extract_text_from_url("https://mp.weixin.qq.com/s/IXrxfaMQzFxswSxCsulejw",
-                      True)
+def cleanup_temp_file(filepath):
+    """Helper function to clean up temporary files"""
+    if filepath and os.path.exists(filepath):
+        try:
+            os.remove(filepath)
+        except Exception:
+            pass
+
+
+# extract_text_from_url("https://mp.weixin.qq.com/s/IXrxfaMQzFxswSxCsulejw",
+#                       True)

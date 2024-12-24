@@ -1,16 +1,15 @@
+import os
+import pypandoc
 from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
 from datetime import datetime
-import os
 from werkzeug.utils import secure_filename
 from urllib.parse import urlparse
-import pypandoc
-
 from agent.rag.tools import VectorStore
 from agent.rag.rag import get_rag_answer
 from agent.writter.report_masitro.masitro import get_report_masitro
 from audio.asr import ASRService
-from utilities import extract_text_from_url, allowed_file, create_response
+from utilities import extract_text_from_url, allowed_file, create_response, cleanup_temp_file, initialize_chrome_driver
 
 # Constants
 UPLOAD_FOLDER = 'uploads/audio'
@@ -37,6 +36,7 @@ os.makedirs('temp',
 # Initialize services
 vectorstore = VectorStore(path="./chroma_db")
 asr_service = ASRService()
+initialize_chrome_driver()  # Initialize Chrome driver at startup
 
 # Mock database (TODO: replace with real database in production)
 users = {"admin@example.com": {"password": "admin123", "role": "admin"}}
@@ -187,15 +187,6 @@ def generate():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-
-def cleanup_temp_file(filepath):
-    """Helper function to clean up temporary files"""
-    if filepath and os.path.exists(filepath):
-        try:
-            os.remove(filepath)
-        except Exception:
-            pass
 
 
 @app.route('/api/convert-to-docx', methods=['POST'])
